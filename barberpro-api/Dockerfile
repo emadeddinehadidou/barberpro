@@ -1,4 +1,4 @@
-FROM php:8.3-apache
+FROM php:8.2-cli
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
@@ -12,12 +12,14 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git \
         unzip \
-        libzip-dev \
+        libonig-dev \
+        libxml2-dev \
     && docker-php-ext-install \
-        pdo \
+        bcmath \
+        mbstring \
         pdo_mysql \
-        zip \
-    && a2enmod rewrite \
+        tokenizer \
+        xml \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -32,14 +34,11 @@ RUN composer install \
     --classmap-authoritative
 
 COPY . .
-COPY apache-vhost.conf /etc/apache2/sites-available/000-default.conf
-COPY start-apache.sh /usr/local/bin/start-apache.sh
 
 RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R ug+rwx storage bootstrap/cache \
-    && chmod +x /usr/local/bin/start-apache.sh
+    && chmod -R ug+rwx storage bootstrap/cache
 
 EXPOSE 8080
 
-CMD ["/usr/local/bin/start-apache.sh"]
+CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
