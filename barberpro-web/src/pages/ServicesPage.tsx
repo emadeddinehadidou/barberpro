@@ -1,19 +1,22 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { api } from "../api/axios";
+import ServiceModal from "../components/ui/ServiceModal";
+import { DEFAULT_SALON_ID } from "../constants/app";
 import type { Service } from "../types";
-
-const salonId = 1;
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
   const loadServices = () => {
     setLoading(true);
+
     api
-      .get<Service[]>(`/services?salon_id=${salonId}`)
+      .get<Service[]>(`/services?salon_id=${DEFAULT_SALON_ID}`)
       .then((res) => setServices(res.data))
       .finally(() => setLoading(false));
   };
@@ -23,24 +26,54 @@ export default function ServicesPage() {
   }, []);
 
   const handleDelete = async (id: number) => {
-    const ok = window.confirm("Delete this service?");
-    if (!ok) return;
+    if (!window.confirm("Delete this service?")) {
+      return;
+    }
 
     try {
       await api.delete(`/services/${id}`);
-      loadServices();
-    } catch {
-      alert("Failed to delete service.");
+      setServices((prev) => prev.filter((service) => service.id !== id));
+    } catch (error: any) {
+      alert(error?.response?.data?.message || "Failed to delete service.");
+    }
+  };
+
+  const handleModalSubmit = async (data: Record<string, unknown>) => {
+    setModalLoading(true);
+
+    try {
+      const response = selectedService
+        ? await api.put<Service>(`/services/${selectedService.id}`, data)
+        : await api.post<Service>("/services", data);
+      const savedService = response.data;
+
+      setServices((prev) => {
+        if (selectedService) {
+          return prev.map((service) =>
+            service.id === savedService.id ? savedService : service
+          );
+        }
+
+        return [savedService, ...prev];
+      });
+
+      setModalOpen(false);
+      setSelectedService(null);
+    } catch (error: any) {
+      console.error("Failed to save service:", error);
+      alert(error?.response?.data?.message || "Failed to save service.");
+    } finally {
+      setModalLoading(false);
     }
   };
 
   const filteredServices = services.filter((service) => {
-    const q = search.toLowerCase();
+    const query = search.toLowerCase();
 
     return (
-      service.name.toLowerCase().includes(q) ||
-      service.category.toLowerCase().includes(q) ||
-      (service.description || "").toLowerCase().includes(q)
+      service.name.toLowerCase().includes(query) ||
+      service.category.toLowerCase().includes(query) ||
+      (service.description || "").toLowerCase().includes(query)
     );
   });
 
@@ -49,23 +82,26 @@ export default function ServicesPage() {
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Services</h1>
-          <p className="mt-2 text-white/60">Gérer tous les services du salon de coiffure</p>
+          <p className="mt-2 text-white/60">Gerer tous les services du salon.</p>
         </div>
 
-        <Link
-          to="/services/create"
+        <button
+          onClick={() => {
+            setSelectedService(null);
+            setModalOpen(true);
+          }}
           className="rounded-xl bg-[#c8a96b] px-4 py-3 font-semibold text-black"
         >
-         Nouveau service
-        </Link>
+          Nouveau service
+        </button>
       </div>
 
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Rechercher des services…"
+          placeholder="Rechercher des services..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(event) => setSearch(event.target.value)}
           className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-[#c8a96b]/50"
         />
       </div>
@@ -76,7 +112,7 @@ export default function ServicesPage() {
             <tr>
               <th className="px-4 py-3">Nom</th>
               <th className="px-4 py-3">Categorie</th>
-              <th className="px-4 py-3">Durée</th>
+              <th className="px-4 py-3">Duree</th>
               <th className="px-4 py-3">Prix</th>
               <th className="px-4 py-3">Statut</th>
               <th className="px-4 py-3">Actions</th>
@@ -87,13 +123,13 @@ export default function ServicesPage() {
             {loading ? (
               <tr>
                 <td colSpan={6} className="px-4 py-6 text-white/60">
-                  Chargement…
+                  Chargement...
                 </td>
               </tr>
             ) : filteredServices.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-6 text-white/60">
-                  Aucun service trouvé.
+                  Aucun service trouve.
                 </td>
               </tr>
             ) : (
@@ -108,17 +144,18 @@ export default function ServicesPage() {
                       currency: "EUR",
                     })}
                   </td>
-                  <td className="px-4 py-3">
-                    {service.is_active ? "Active" : "Inactive"}
-                  </td>
+                  <td className="px-4 py-3">{service.is_active ? "Active" : "Inactive"}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
-                      <Link
-                        to={`/services/${service.id}/edit`}
+                      <button
+                        onClick={() => {
+                          setSelectedService(service);
+                          setModalOpen(true);
+                        }}
                         className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm"
                       >
                         Modifier
-                      </Link>
+                      </button>
                       <button
                         onClick={() => handleDelete(service.id)}
                         className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-300"
@@ -133,6 +170,17 @@ export default function ServicesPage() {
           </tbody>
         </table>
       </div>
+
+      <ServiceModal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedService(null);
+        }}
+        service={selectedService}
+        onSubmit={handleModalSubmit}
+        loading={modalLoading}
+      />
     </div>
   );
 }

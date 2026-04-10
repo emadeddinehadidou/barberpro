@@ -8,10 +8,10 @@ type PanelProps = {
 
 export default function Panel({ title, subtitle, children }: PanelProps) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.2)]">
+    <div className="rounded-3xl border border-[#e2d5c2] bg-white/80 p-6 shadow-[0_18px_50px_rgba(114,84,48,0.1)] backdrop-blur-sm">
       <div className="mb-5">
-        <h2 className="text-xl font-semibold text-white">{title}</h2>
-        {subtitle ? <p className="mt-1 text-sm text-white/50">{subtitle}</p> : null}
+        <h2 className="text-xl font-semibold text-[#2b2116]">{title}</h2>
+        {subtitle ? <p className="mt-1 text-sm text-[#7b6b58]">{subtitle}</p> : null}
       </div>
 
       {children}

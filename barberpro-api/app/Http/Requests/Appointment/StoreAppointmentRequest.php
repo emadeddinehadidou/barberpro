@@ -21,7 +21,7 @@ class StoreAppointmentRequest extends FormRequest
             'appointment_date' => ['required', 'date'],
             'start_time' => ['required'],
             'end_time' => ['required'],
-            'status' => ['nullable', 'in:pending,confirmed,completed,cancelled,no_show'],
+            'status' => ['nullable', 'in:pending,confirmed,completed,cancelled,absent,no_show'],
             'total_price' => ['required', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
             'source' => ['nullable', 'in:app,walk_in,phone,admin'],

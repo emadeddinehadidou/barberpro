@@ -13,13 +13,22 @@ class ServiceController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Service::query()->latest();
+        $user = $request->user();
+        $query = Service::query();
 
-        if ($request->filled('salon_id')) {
-            $query->where('salon_id', $request->integer('salon_id'));
+        if ($user->hasRole('admin')) {
+            if ($request->filled('salon_id')) {
+                $query->where('salon_id', $request->integer('salon_id'));
+            }
+        } elseif ($user->hasRole('barber')) {
+            $salonIds = $user->salons()->pluck('salons.id');
+            $query->whereIn('salon_id', $salonIds);
+        } elseif ($user->hasRole('client')) {
+            // Clients can only see active services
+            $query->where('is_active', true);
         }
 
-        return response()->json($query->get());
+        return response()->json($query->latest()->get());
     }
 
     public function store(StoreServiceRequest $request): JsonResponse
@@ -35,11 +44,14 @@ class ServiceController extends Controller
 
     public function show(Service $service): JsonResponse
     {
+        $this->authorize('view', $service);
         return response()->json($service);
     }
 
     public function update(StoreServiceRequest $request, Service $service): JsonResponse
     {
+        $this->authorize('update', $service);
+
         $service->update([
             ...$request->validated(),
             'slug' => Str::slug($request->name) . '-' . Str::random(5),
@@ -51,6 +63,7 @@ class ServiceController extends Controller
 
     public function destroy(Service $service): JsonResponse
     {
+        $this->authorize('delete', $service);
         $service->delete();
 
         return response()->json([

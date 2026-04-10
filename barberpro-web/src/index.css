@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: Manrope, "Segoe UI", sans-serif;
 }
 
 html,
@@ -13,12 +13,194 @@ body,
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top left, rgba(200, 169, 107, 0.08), transparent 30%),
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.04), transparent 25%),
-    linear-gradient(180deg, #09090b 0%, #0b0b0d 100%);
-  color: white;
+    radial-gradient(circle at top left, rgba(200, 169, 107, 0.16), transparent 28%),
+    linear-gradient(180deg, #fffdf9 0%, #f6eee2 100%);
+  color: #2b2116;
+  line-height: 1.5;
 }
 
 * {
   box-sizing: border-box;
+}
+
+.luxury-light .text-white {
+  color: #2b2116;
+}
+
+.luxury-light .text-black {
+  color: #20180f;
+}
+
+.luxury-light .text-white\/60,
+.luxury-light .text-white\/55,
+.luxury-light .text-white\/70,
+.luxury-light .text-white\/65,
+.luxury-light .text-white\/50,
+.luxury-light .text-white\/45,
+.luxury-light .text-white\/40,
+.luxury-light .text-white\/35 {
+  color: #665440;
+}
+
+.luxury-light .placeholder\:text-white\/35::placeholder,
+.luxury-light .placeholder\:text-white\/40::placeholder,
+.luxury-light .placeholder\:text-white\/50::placeholder {
+  color: #8a7761;
+}
+
+.luxury-light .text-xs {
+  font-size: 0.78rem;
+}
+
+.luxury-light .text-sm {
+  font-size: 0.95rem;
+}
+
+.luxury-light .bg-white\/5,
+.luxury-light .bg-white\/10,
+.luxury-light .bg-black\/20,
+.luxury-light .bg-black\/10 {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.luxury-light .bg-gradient-to-r.from-\[\#17171c\].via-\[\#111114\].to-\[\#0d0d10\] {
+  position: relative;
+  overflow: hidden;
+  border-color: #dfcfb5;
+  background:
+    radial-gradient(circle at top left, rgba(220, 188, 132, 0.28), transparent 28%),
+    linear-gradient(135deg, rgba(44, 31, 18, 0.96) 0%, rgba(94, 69, 36, 0.94) 45%, rgba(242, 229, 205, 0.96) 100%);
+  box-shadow: 0 24px 70px rgba(63, 43, 20, 0.2);
+}
+
+.luxury-light .bg-gradient-to-r.from-\[\#17171c\].via-\[\#111114\].to-\[\#0d0d10\]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(17, 12, 8, 0.28), rgba(17, 12, 8, 0.08) 44%, rgba(255, 250, 242, 0.08)),
+    radial-gradient(circle at top left, rgba(220, 188, 132, 0.18), transparent 24%);
+  pointer-events: none;
+}
+
+.luxury-light .bg-gradient-to-r.from-\[\#17171c\].via-\[\#111114\].to-\[\#0d0d10\] > * {
+  position: relative;
+  z-index: 1;
+}
+
+.luxury-light .bg-gradient-to-r.from-\[\#17171c\].via-\[\#111114\].to-\[\#0d0d10\] .text-white {
+  color: #fffaf2;
+}
+
+.luxury-light .bg-gradient-to-r.from-\[\#17171c\].via-\[\#111114\].to-\[\#0d0d10\] h1 {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.luxury-light .bg-gradient-to-r.from-\[\#17171c\].via-\[\#111114\].to-\[\#0d0d10\] .text-white\/55,
+.luxury-light .bg-gradient-to-r.from-\[\#17171c\].via-\[\#111114\].to-\[\#0d0d10\] .text-white\/60 {
+  color: rgba(255, 246, 230, 0.88);
+}
+
+.luxury-light .bg-gradient-to-r.from-\[\#17171c\].via-\[\#111114\].to-\[\#0d0d10\] .text-\[\#c8a96b\]\/80 {
+  color: #f0d39f;
+}
+
+.luxury-light .bg-\[\#c8a96b\] {
+  background-color: #8a6a3c;
+}
+
+.luxury-light .text-\[\#c8a96b\] {
+  color: #8a6a3c;
+}
+
+.luxury-light .hover\:bg-\[\#b8955a\]:hover,
+.luxury-light .hover\:opacity-90:hover {
+  background-color: #755732;
+  opacity: 1;
+}
+
+.luxury-light .border-white\/10 {
+  border-color: #e2d5c2;
+}
+
+.luxury-light .border-red-500\/20 {
+  border-color: rgba(176, 74, 56, 0.24);
+}
+
+.luxury-light .bg-red-500\/10 {
+  background: rgba(176, 74, 56, 0.1);
+}
+
+.luxury-light .text-red-300,
+.luxury-light .text-red-400 {
+  color: #9f3d2d;
+}
+
+.luxury-light .text-blue-300,
+.luxury-light .text-blue-800 {
+  color: #295a8e;
+}
+
+.luxury-light .text-green-300,
+.luxury-light .text-green-800 {
+  color: #2f6b4f;
+}
+
+.luxury-light .text-yellow-800 {
+  color: #8c6518;
+}
+
+.luxury-light input,
+.luxury-light select,
+.luxury-light textarea {
+  background: #fffaf2;
+  color: #2b2116;
+  border-color: #ddceb6;
+}
+
+.luxury-light input::placeholder,
+.luxury-light textarea::placeholder {
+  color: #8a7761;
+}
+
+.luxury-light label,
+.luxury-light th,
+.luxury-light h1,
+.luxury-light h2,
+.luxury-light h3,
+.luxury-light h4 {
+  color: #2b2116;
+}
+
+.luxury-light button,
+.luxury-light a {
+  font-weight: 500;
+}
+
+.luxury-light button:focus-visible,
+.luxury-light a:focus-visible,
+.luxury-light input:focus-visible,
+.luxury-light select:focus-visible,
+.luxury-light textarea:focus-visible {
+  outline: 2px solid #b78e56;
+  outline-offset: 2px;
+}
+
+.luxury-light table thead {
+  background: rgba(138, 106, 60, 0.12);
+  color: #4b3824;
+}
+
+.luxury-light table tbody tr {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.luxury-light table td {
+  color: #3f3020;
+}
+
+.luxury-light .shadow-lg,
+.luxury-light .shadow-2xl {
+  box-shadow: 0 18px 40px rgba(114, 84, 48, 0.12);
 }

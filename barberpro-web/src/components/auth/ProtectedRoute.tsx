@@ -8,7 +8,7 @@ export default function ProtectedRoute() {
 
   if (!authChecked) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0b0b0d] text-white">
+      <div className="flex min-h-screen items-center justify-center bg-[#f6f0e6] text-[#2d2418]">
         Loading...
       </div>
     );
@@ -33,7 +33,7 @@ export default function ProtectedRoute() {
     pathname.startsWith("/barbers");
 
   if (user.role === "client" && isAdminArea) {
-    return <Navigate to="/client/profile" replace />;
+    return <Navigate to="/client/dashboard" replace />;
   }
 
   if (user.role !== "client" && isClientArea) {

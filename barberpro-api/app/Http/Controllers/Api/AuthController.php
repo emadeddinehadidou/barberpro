@@ -25,6 +25,8 @@ class AuthController extends Controller
             'is_active' => true,
         ]);
 
+        $user->assignRole('client');
+
         Auth::login($user);
         $request->session()->regenerate();
 
@@ -44,6 +46,8 @@ class AuthController extends Controller
             'role' => 'client',
             'is_active' => true,
         ]);
+
+        $user->assignRole('client');
 
         $client = Client::create([
             'user_id' => $user->id,
@@ -73,10 +77,15 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        $user = $request->user();
+
+        if ($user && $user->role && !$user->hasRole($user->role)) {
+            $user->syncRoles([$user->role]);
+        }
 
         return response()->json([
             'message' => 'Logged in successfully.',
-            'user' => $request->user(),
+            'user' => $user,
         ]);
     }
 

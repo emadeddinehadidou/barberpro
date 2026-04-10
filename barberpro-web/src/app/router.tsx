@@ -8,6 +8,7 @@ import BarberFormPage from "../pages/BarberFormPage";
 import BarbersPage from "../pages/BarbersPage";
 import ClientAppointmentsPage from "../pages/ClientAppointmentsPage";
 import ClientBookAppointmentPage from "../pages/ClientBookAppointmentPage";
+import ClientEditPage from "../pages/ClientEditPage";
 import ClientFormPage from "../pages/ClientFormPage";
 import ClientProfilePage from "../pages/ClientProfilePage";
 import ClientRegisterPage from "../pages/ClientRegisterPage";
@@ -44,7 +45,7 @@ export const router = createBrowserRouter([
 
           { path: "clients", element: <ClientsPage /> },
           { path: "clients/create", element: <ClientFormPage /> },
-          { path: "clients/:id/edit", element: <ClientFormPage /> },
+          { path: "clients/:id/edit", element: <ClientEditPage /> },
 
           { path: "appointments", element: <AppointmentsPage /> },
           { path: "appointments/create", element: <AppointmentFormPage /> },
@@ -59,10 +60,12 @@ export const router = createBrowserRouter([
         path: "/client",
         element: <ClientShell />,
         children: [
-          { index: true, element: <Navigate to="/client/profile" replace /> },
+          { index: true, element: <Navigate to="/client/dashboard" replace /> },
+          { path: "dashboard", element: <DashboardPage /> },
           { path: "profile", element: <ClientProfilePage /> },
           { path: "appointments", element: <ClientAppointmentsPage /> },
           { path: "book", element: <ClientBookAppointmentPage /> },
+          { path: "appointments/:id/edit", element: <ClientBookAppointmentPage /> },
         ],
       },
     ],

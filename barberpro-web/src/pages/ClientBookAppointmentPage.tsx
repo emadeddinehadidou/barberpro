@@ -1,25 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/axios";
-import { useAuthStore } from "../app/store";
-import type { Client, Service, User } from "../types";
+import { DEFAULT_SALON_ID } from "../constants/app";
+import type { Appointment, Client, Service, User } from "../types";
+import { addMinutesToTime } from "../utils/appointmentForm";
 
-const salonId = 1;
-
-function addMinutesToTime(time: string, minutesToAdd: number) {
-  if (!time) return "";
-
-  const [hours, minutes] = time.split(":").map(Number);
-  const total = hours * 60 + minutes + minutesToAdd;
-  const newHours = Math.floor(total / 60) % 24;
-  const newMinutes = total % 60;
-
-  return `${String(newHours).padStart(2, "0")}:${String(newMinutes).padStart(2, "0")}`;
+interface ClientAppointmentLocationState {
+  appointment?: Appointment;
 }
 
 export default function ClientBookAppointmentPage() {
-  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { id } = useParams();
+  const isEdit = Boolean(id);
+  const preloadedAppointment =
+    (location.state as ClientAppointmentLocationState | null)?.appointment ?? null;
 
   const [client, setClient] = useState<Client | null>(null);
   const [services, setServices] = useState<Service[]>([]);
@@ -27,7 +23,6 @@ export default function ClientBookAppointmentPage() {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [form, setForm] = useState({
     service_id: "",
     barber_id: "",
@@ -39,24 +34,40 @@ export default function ClientBookAppointmentPage() {
   });
 
   useEffect(() => {
-    if (!user) return;
-
     Promise.all([
-      api.get<Client[]>("/clients?salon_id=1"),
-      api.get<Service[]>(`/services?salon_id=${salonId}`),
-      api.get<User[]>("/barbers"),
+      api.get<Client>("/client/profile"),
+      api.get<Service[]>(`/client/services?salon_id=${DEFAULT_SALON_ID}`),
+      api.get<User[]>("/client/barbers"),
+      isEdit && !preloadedAppointment
+        ? api.get<Appointment>(`/client/appointments/${id}`)
+        : Promise.resolve({ data: preloadedAppointment }),
     ])
-      .then(([clientsRes, servicesRes, barbersRes]) => {
-        const foundClient =
-          clientsRes.data.find((item) => item.user_id === user.id) || null;
-
-        setClient(foundClient);
+      .then(([clientRes, servicesRes, barbersRes, appointmentRes]) => {
+        setClient(clientRes.data);
         setServices(servicesRes.data);
         setBarbers(barbersRes.data);
+
+        const appointment = appointmentRes.data;
+
+        if (appointment) {
+          setForm({
+            service_id: String(appointment.service_id),
+            barber_id: String(appointment.barber_id),
+            appointment_date: appointment.appointment_date,
+            start_time: appointment.start_time.slice(0, 5),
+            end_time: appointment.end_time.slice(0, 5),
+            total_price: Number(appointment.total_price),
+            notes: appointment.notes || "",
+          });
+        }
       })
-      .catch(() => setError("Échec du chargement des données de réservation."))
+      .catch((err: any) => {
+        setError(
+          err?.response?.data?.message || "Impossible de charger les donnees de reservation."
+        );
+      })
       .finally(() => setPageLoading(false));
-  }, [user]);
+  }, [id, isEdit, preloadedAppointment]);
 
   const selectedService = useMemo(
     () => services.find((service) => service.id === Number(form.service_id)),
@@ -64,7 +75,9 @@ export default function ClientBookAppointmentPage() {
   );
 
   useEffect(() => {
-    if (!selectedService) return;
+    if (!selectedService) {
+      return;
+    }
 
     setForm((prev) => ({
       ...prev,
@@ -76,7 +89,9 @@ export default function ClientBookAppointmentPage() {
   }, [selectedService]);
 
   useEffect(() => {
-    if (!form.start_time || !selectedService) return;
+    if (!form.start_time || !selectedService) {
+      return;
+    }
 
     setForm((prev) => ({
       ...prev,
@@ -85,9 +100,9 @@ export default function ClientBookAppointmentPage() {
   }, [form.start_time, selectedService]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
+    const { name, value } = event.target;
 
     setForm((prev) => ({
       ...prev,
@@ -100,47 +115,60 @@ export default function ClientBookAppointmentPage() {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!client) return;
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!client) {
+      return;
+    }
 
     setLoading(true);
     setError("");
 
     const payload = {
-      salon_id: salonId,
+      salon_id: client.salon_id || DEFAULT_SALON_ID,
       client_id: client.id,
       barber_id: Number(form.barber_id),
       service_id: Number(form.service_id),
       appointment_date: form.appointment_date,
       start_time: `${form.start_time}:00`,
       end_time: `${form.end_time}:00`,
-      status: "pending",
       total_price: Number(form.total_price),
       notes: form.notes || null,
       source: "app",
     };
 
     try {
-      await api.post("/appointments", payload);
+      if (isEdit) {
+        await api.put(`/client/appointments/${id}`, payload);
+      } else {
+        await api.post("/client/appointments", payload);
+      }
+
       navigate("/client/appointments");
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Échec de la réservation du rendez-vous.");
+      setError(
+        err?.response?.data?.message || "Impossible d'enregistrer le rendez-vous."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   if (pageLoading) {
-    return <div className="text-white">Chargement de la page de réservation…</div>;
+    return <div className="text-white">Chargement de la reservation...</div>;
   }
 
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Prendre rendez-vous</h1>
+        <h1 className="text-3xl font-bold text-white">
+          {isEdit ? "Modifier mon rendez-vous" : "Prendre rendez-vous"}
+        </h1>
         <p className="mt-2 text-white/60">
-          Choisissez votre service, votre barbier et votre créneau horaire
+          {isEdit
+            ? "Le formulaire est pre-rempli avec votre rendez-vous."
+            : "Choisissez votre service, votre barbier et votre horaire."}
         </p>
       </div>
 
@@ -157,10 +185,11 @@ export default function ClientBookAppointmentPage() {
             className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 outline-none"
             required
           >
-            <option value="">Sélectionner un service</option>
+            <option value="">Selectionner un service</option>
             {services.map((service) => (
               <option key={service.id} value={service.id}>
-                {service.name} — {Number(service.price).toLocaleString("fr-FR", {
+                {service.name} -{" "}
+                {Number(service.price).toLocaleString("fr-FR", {
                   style: "currency",
                   currency: "EUR",
                 })}
@@ -178,7 +207,7 @@ export default function ClientBookAppointmentPage() {
             className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 outline-none"
             required
           >
-            <option value="">Sélectionner un barbier</option>
+            <option value="">Selectionner un barbier</option>
             {barbers.map((barber) => (
               <option key={barber.id} value={barber.id}>
                 {barber.name}
@@ -201,7 +230,7 @@ export default function ClientBookAppointmentPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm">Heure de début</label>
+            <label className="mb-2 block text-sm">Heure de debut</label>
             <input
               name="start_time"
               type="time"
@@ -220,7 +249,7 @@ export default function ClientBookAppointmentPage() {
               value={form.end_time}
               onChange={handleChange}
               className="w-full rounded-xl border border-white/10 bg-black/10 px-4 py-3 outline-none"
-              required
+              readOnly
             />
           </div>
         </div>
@@ -232,7 +261,7 @@ export default function ClientBookAppointmentPage() {
             value={form.notes}
             onChange={handleChange}
             className="min-h-[120px] w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 outline-none"
-            placeholder="Add a note for your appointment..."
+            placeholder="Ajoutez une note si besoin."
           />
         </div>
 
@@ -246,13 +275,22 @@ export default function ClientBookAppointmentPage() {
             })}
           </p>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-xl bg-[#c8a96b] px-5 py-3 font-semibold text-black"
-          >
-            {loading ? "Réservation en cours…" : "Confirmer le rendez-vous"}
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => navigate("/client/appointments")}
+              className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-semibold text-white"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-xl bg-[#c8a96b] px-5 py-3 font-semibold text-black"
+            >
+              {loading ? "Enregistrement..." : isEdit ? "Mettre a jour" : "Confirmer"}
+            </button>
+          </div>
         </div>
       </form>
     </div>

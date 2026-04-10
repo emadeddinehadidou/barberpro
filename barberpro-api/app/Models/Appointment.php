@@ -29,6 +29,7 @@ class Appointment extends Model
         return [
             'appointment_date' => 'date',
             'total_price' => 'decimal:2',
+            'reminder_sent_at' => 'datetime',
         ];
     }
 

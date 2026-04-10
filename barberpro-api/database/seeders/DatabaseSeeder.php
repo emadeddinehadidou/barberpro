@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(RolePermissionSeeder::class);
+
         $admin = User::create([
             'name' => 'Salon Admin',
             'email' => 'admin@barberpro.test',
@@ -21,6 +23,7 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
             'is_active' => true,
         ]);
+        $admin->assignRole('admin');
 
         
 
@@ -32,6 +35,7 @@ class DatabaseSeeder extends Seeder
             'role' => 'barber',
             'is_active' => true,
         ]);
+        $barber->assignRole('barber');
 
         $salon = Salon::create([
             'owner_id' => $admin->id,

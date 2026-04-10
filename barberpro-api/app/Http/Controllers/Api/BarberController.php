@@ -42,6 +42,8 @@ class BarberController extends Controller
             'is_active' => $request->boolean('is_active', true),
         ]);
 
+        $barber->assignRole('barber');
+
         return response()->json($barber, 201);
     }
 
@@ -80,6 +82,7 @@ class BarberController extends Controller
         }
 
         $barber->update($data);
+        $barber->syncRoles(['barber']);
 
         return response()->json($barber);
     }
